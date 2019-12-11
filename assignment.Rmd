@@ -1,0 +1,130 @@
+---
+title: "Analytics Assignment"
+Author: Prashant Chand
+---
+
+### Data Loading and subsetting
+```{r}
+library(lubridate)
+library(dplyr)
+data<-read.csv("data.csv")
+data<-data[,c("eventTimestamp","userID","sessionID","platform","userCountry","realCurrencyAmount.1","realCurrencyType")]
+data$eventTimestamp<-as.Date(as.character(as.POSIXct(data$eventTimestamp)))
+data<-mutate(data,Date=as.Date(data$eventTimestamp))
+data$platform<-as.character(data$platform)
+```
+
+### Conversion of other currency to USD for answering question 3 and 4
+```{r}
+data$realCurrencyType<-as.character(data$realCurrencyType)
+data[is.na(data$realCurrencyType)==TRUE,]$realCurrencyType<-"FAKE"
+data[data$realCurrencyType=="GBP",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="GBP",]$realCurrencyAmount.1)*1.31
+data[data$realCurrencyType=="AUD",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="AUD",]$realCurrencyAmount.1)*0.682
+data[data$realCurrencyType=="DKK",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="DKK",]$realCurrencyAmount.1)*0.148
+data[data$realCurrencyType=="CAD",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="CAD",]$realCurrencyAmount.1)*0.755
+data[data$realCurrencyType=="CHF",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="CHF",]$realCurrencyAmount.1)*1.015
+data[data$realCurrencyType=="EUR",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="EUR",]$realCurrencyAmount.1)*1.1
+data[data$realCurrencyType=="SEK",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="SEK",]$realCurrencyAmount.1)*0.105
+data[data$realCurrencyType=="TWD",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="TWD",]$realCurrencyAmount.1)*0.032
+data[data$realCurrencyType=="RUB",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="RUB",]$realCurrencyAmount.1)*0.015
+data[data$realCurrencyType=="NOK",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="NOK",]$realCurrencyAmount.1)*0.109
+data[data$realCurrencyType=="BRL",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="BRL",]$realCurrencyAmount.1)*0.24
+data[data$realCurrencyType=="NZD",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="NZD",]$realCurrencyAmount.1)*0.652
+data[data$realCurrencyType=="JPY",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="JPY",]$realCurrencyAmount.1)*0.009
+data[data$realCurrencyType=="THB",]$realCurrencyAmount.1<-(data[data$realCurrencyType=="THB",]$realCurrencyAmount.1)*0.033
+```
+
+### Q1) D1,D7,D28 retention
+
+### For ANDROID USERS
+
+D1 Retention
+```{r}
+android_data<-data[data$platform=="ANDROID",]
+(length(na.omit(match(unique(android_data[android_data$Date=="2019-11-01",]$userID),unique(android_data[android_data$Date=="2019-11-02",]$userID))))/length(unique(android_data[android_data$Date=="2019-11-01",]$userID)))*100
+```
+D7 Retention
+```{r}
+(length(na.omit(match(unique(android_data[android_data$Date=="2019-11-01",]$userID),unique(android_data[android_data$Date=="2019-11-08",]$userID))))/length(unique(android_data[android_data$Date=="2019-11-01",]$userID)))*100
+```
+D28 Retention
+```{r}
+(length(na.omit(match(unique(android_data[android_data$Date=="2019-11-01",]$userID),unique(android_data[android_data$Date=="2019-11-29",]$userID))))/length(unique(android_data[android_data$Date=="2019-11-01",]$userID)))*100
+```
+
+### For IOS USERS
+
+D1 Retention
+```{r}
+ios_data<-data[data$platform=="IOS",]
+(length(na.omit(match(unique(ios_data[ios_data$Date=="2019-11-01",]$userID),unique(ios_data[ios_data$Date=="2019-11-02",]$userID))))/length(unique(ios_data[ios_data$Date=="2019-11-01",]$userID)))*100
+```
+D7 Retention
+```{r}
+(length(na.omit(match(unique(ios_data[ios_data$Date=="2019-11-01",]$userID),unique(ios_data[ios_data$Date=="2019-11-08",]$userID))))/length(unique(ios_data[ios_data$Date=="2019-11-01",]$userID)))*100
+```
+D28 Retention
+```{r}
+(length(na.omit(match(unique(ios_data[ios_data$Date=="2019-11-01",]$userID),unique(ios_data[ios_data$Date=="2019-11-29",]$userID))))/length(unique(ios_data[ios_data$Date=="2019-11-01",]$userID)))*100
+```
+
+### For both platform users
+
+D1 Retention
+```{r}
+(length(na.omit(match(unique(data[data$Date=="2019-11-01",]$userID),unique(data[data$Date=="2019-11-02",]$userID))))/length(unique(data[data$Date=="2019-11-01",]$userID)))*100
+```
+D7 Retention
+```{r}
+(length(na.omit(match(unique(data[data$Date=="2019-11-01",]$userID),unique(data[data$Date=="2019-11-08",]$userID))))/length(unique(data[data$Date=="2019-11-01",]$userID)))*100
+```
+D28 Retention
+```{r}
+(length(na.omit(match(unique(data[data$Date=="2019-11-01",]$userID),unique(data[data$Date=="2019-11-29",]$userID))))/length(unique(data[data$Date=="2019-11-01",]$userID)))*100
+```
+
+### Q2) Daily active users
+```{r}
+daily_user_data<-data %>% group_by(Date) %>% summarise(Daily_users=length(unique(userID)))
+daily_user_data
+```
+
+### Q3) ARPDAU in USD
+For ANDROID
+```{r}
+android_data<-data[data$platform=="ANDROID",]
+android_data %>% group_by(Date) %>% summarise(ARPDAU=sum(realCurrencyAmount.1)/length(unique(userID)))
+```
+For IOS
+```{r}
+ios_data<-data[data$platform=="IOS",]
+ios_data %>% group_by(Date) %>% summarise(ARPDAU=sum(realCurrencyAmount.1)/length(unique(userID)))
+```
+For both platform users
+```{r}
+data %>% group_by(Date) %>% summarise(ARPDAU=sum(realCurrencyAmount.1)/length(unique(userID)))
+```
+
+### Q4) Maximum revenue earned by a user in USD
+```{r}
+newdata<-data %>% group_by(userID) %>% mutate(amount_earned=sum(realCurrencyAmount.1))
+max(newdata$amount_earned)
+```
+
+### UserID of the user who earned the max revenue
+```{r}
+newdata[newdata$amount_earned==max(newdata$amount_earned),]$userID[1]
+```
+
+### Q5) Average sessions/user
+```{r}
+length(data$sessionID)/length(unique(data$userID))
+```
+
+### Q6) Total users in the game
+```{r}
+length(unique(data$userID))
+```
+
+
+
